@@ -11,27 +11,27 @@
     <div class="card">
         <div class="user-detail">
             <img class="user" src="https://images.unsplash.com/photo-1517849845537-4d257902454a?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=435&q=80" alt="cat">
-            <h4>Usernamemint</h4>
+            <h4 id="showUsername">Usernamemint</h4>
         </div>
-        <div class="renderchat">
-            <div class="chat-incoming">
+        <div id="render" class="renderchat">
+            <!-- <div class="chat-incoming">
                 <img class="user" src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80" style="width: 30px; height: 30px;" alt="dog blue">
                 <span>Hello world</span>
-            </div>
-            <div class="chat-outcoming">
+            </div> -->
+            <!-- <div class="chat-outcoming">
                 <span>Hello world</span>
                 <img class="user" src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80" style="width: 30px; height: 30px;" alt="dog blue">
-            </div>
+            </div> -->
         </div>
         <div class="sendmsg">
-            <input class="form-control" placeholder="Message..." type="text">
-            <button class="btn-primary">Send</button>
+            <input id="txtMsg" class="form-control" placeholder="Message..." type="text">
+            <button id="btnSend" class="btn-primary">Send</button>
         </div>
     </div>
     <script type="module">
         // Import the functions you need from the SDKs you need
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.13.0/firebase-app.js";
-        import { getDatabase } from "https://www.gstatic.com/firebasejs/9.13.0/firebase-database.js";
+        import { getDatabase,set,push,ref,onValue } from "https://www.gstatic.com/firebasejs/9.13.0/firebase-database.js";
         // TODO: Add SDKs for Firebase products that you want to use
         // https://firebase.google.com/docs/web/setup#available-libraries
       
@@ -51,8 +51,45 @@
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app)
+
         const user = window.prompt('Your name : ')
         console.log(user)
+        document.querySelector('#showUsername').innerHTML = user;
+
+        const btnSend = document.querySelector('#btnSend')
+        const txtMsg = document.querySelector('#txtMsg')
+        btnSend.addEventListener('click', () => {
+            //action
+            set(push(ref(db, 'room1')), {
+                username: user,
+                msg: txtMsg.value
+            })
+            txtMsg.value = '';
+        })
+
+        onValue(ref(db, 'room1'), (snapshot) => {
+            const data = snapshot.val();
+            var html = '';
+            snapshot.forEach((childSnapshot) => {
+                var key = childSnapshot.key;
+                var val = childSnapshot.val();
+                if(data[key].username != user){
+                    console.log('not my message')
+                    html += `<div class="chat-incoming">
+                <img class="user" src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80" style="width: 30px; height: 30px;" alt="dog blue">
+                <span>${data[key].msg}</span>
+            </div>`
+                } else {
+                    console.log('my message')
+                    html += `<div class="chat-outcoming">
+                <span>${data[key].msg}</span>
+                <img class="user" src="https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=464&q=80" style="width: 30px; height: 30px;" alt="dog blue">
+            </div>`
+                }
+            })
+            document.querySelector('#render').innerHTML = html;
+        })
+
       </script>
 </body>
 </html>
